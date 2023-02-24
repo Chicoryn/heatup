@@ -1,0 +1,30 @@
+.grid-container {
+    display: grid;
+}
+
+.grid-main {
+    gap: 20px;
+    grid-template-areas:
+        "raid-setup raid-setup"
+        "left right";
+}
+
+.grid-container .grid-raid-setup {
+    grid-area: raid-setup;
+}
+
+.grid-container .grid-left {
+    grid-area: left;
+}
+
+.grid-container .grid-right {
+    grid-area: right;
+}
+
+.note-template {
+    min-height: 600px;
+}
+
+.note-output {
+    min-height: 600px;
+}
