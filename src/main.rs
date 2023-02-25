@@ -151,7 +151,7 @@ impl Template {
 
                 while USAGE.is_match(&line) {
                     let uid = self.usages[count].uid;
-                    let replace_with = if let Some(display_name) = &assignments[&uid] {
+                    let replace_with = if let Some(Some(display_name)) = &assignments.get(&uid) {
                         display_name.clone()
                     } else {
                         "{spell:0} Panic!".to_string()
