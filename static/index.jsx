@@ -107,6 +107,7 @@ function Template({ template, onChange, onInput }) {
     return <>
         <textarea
             className="flex-auto rounded resize-none"
+            placeholder="{time:30} {{group-name}}"
             onInput={event => setContent(event.currentTarget.value)}
             value={content}
         />
