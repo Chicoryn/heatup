@@ -167,16 +167,51 @@ function NoteOutput({ value, isLoading }) {
     </div>;
 }
 
+const hashStorage = {
+    all: () => {
+        try {
+            return JSON.parse(atob(location.hash.slice(1)));
+        } catch (_) {
+            return {};
+        }
+    },
+
+    set: (state) => {
+        location.hash = btoa(JSON.stringify(state));
+    },
+
+    getItem: (name) => {
+        return hashStorage.all()[name];
+    },
+
+    removeItem: (name) => {
+        let state = hashStorage.all();
+        delete state[name];
+
+        hashStorage.set(state);
+    },
+
+    setItem: (name, value) => {
+        let state = hashStorage.all();
+        state[name] = value;
+
+        hashStorage.set(state);
+    }
+};
+
 function useLocalStorageState(name, initialValue) {
-    let stored = localStorage.getItem(name);
+    let stored = hashStorage.getItem(name) || localStorage.getItem(name);
     let parsed = stored && JSON.parse(stored);
     let [value, setValue] = useState(parsed || initialValue);
 
     useEffect(() => {
-        if (!value)
+        if (!value) {
             localStorage.removeItem(name);
-        else
+            hashStorage.removeItem(name);
+        } else {
             localStorage.setItem(name, JSON.stringify(value));
+            hashStorage.setItem(name, JSON.stringify(value));
+        }
     }, [value]);
 
     return [value, setValue];
@@ -222,7 +257,7 @@ function Main() {
                 if (body.error)
                     alert(body.error);
                 else
-                    setOutput(body.output)
+                    setOutput(body.output || '')
             })
             .then(_ => setLoading(false));
 
