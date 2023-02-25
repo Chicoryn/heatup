@@ -65,7 +65,7 @@ impl<'a> Schedule<'a> {
         self.usages.iter()
             .zip(usage_vars.iter())
             .flat_map(|(usage, vars)| {
-                vars.iter().map(|var| usage.value * *var)
+                vars.iter().enumerate().map(|(i, var)| usage.value * self.cooldowns[i].value * *var)
             })
             .sum::<Expression>()
     }

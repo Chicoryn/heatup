@@ -1,4 +1,3 @@
-#[derive(Debug)]
 pub struct CooldownUsage {
     pub uid: u64,
     pub at: u64,

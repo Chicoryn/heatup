@@ -10,34 +10,70 @@ function ButtonLink({ onClick, className, ...props }) {
     </a>;
 }
 
-function Cooldown({key, onChange, onRemove, displayName, cooldown, groupName}) {
+function Cooldown({key, onChange, onRemove, displayName, cooldown, groupName, value}) {
+    const [displayName_, setDisplayName] = useState(displayName);
+    const [cooldown_, setCooldown] = useState(cooldown);
+    const [groupName_, setGroupName] = useState(groupName);
+    const [value_, setValue] = useState(value);
+    const emit = () => {
+        if (!displayName_) {
+            // pass
+        } else if (!groupName_) {
+            // pass
+        } else if (!+cooldown_) {
+            // pass
+        } else if (!+value_) {
+            // pass
+        } else {
+            onChange({
+                displayName: displayName_,
+                cooldown: cooldown_,
+                groupName: groupName_,
+                value: value_,
+            })
+        }
+    };
+
     return <tr key={key}>
         <td>
             <input
                 type="text"
-                value={displayName}
+                value={displayName_}
                 placeholder="{spell:70940} Name"
-                className="form-input rounded"
-                onChange={event => onChange({ displayName: event.currentTarget.value, cooldown, groupName })}
+                className={"form-input rounded " + (!displayName_ ? "border-red-500" : "")}
+                onBlur={_ => emit()}
+                onChange={event => setDisplayName(event.currentTarget.value)}
+            />
+        </td>
+        <td>
+            <input
+                type="text"
+                value={groupName_}
+                placeholder="Group Names"
+                className={"form-input rounded " + (!groupName_ ? "border-red-500" : "")}
+                size={50}
+                onBlur={_ => emit()}
+                onChange={event => setGroupName(event.currentTarget.value)}
             />
         </td>
         <td>
             <input
                 type="number"
-                value={cooldown}
+                value={cooldown_}
                 placeholder="Cooldown (sec)"
-                className="form-input rounded"
-                onChange={event => onChange({ displayName, cooldown: event.currentTarget.value, groupName })}
+                className={"form-input rounded " + (!+cooldown_ ? "border-red-500" : "")}
+                onBlur={_ => emit()}
+                onChange={event => setCooldown(event.currentTarget.value)}
             />
         </td>
         <td>
             <input
-                type="text"
-                value={groupName}
-                placeholder="Group Names"
-                className="form-input rounded"
-                size={50}
-                onChange={event => onChange({ displayName, cooldown, groupName: event.currentTarget.value })}
+                type="number"
+                value={value_}
+                placeholder="Value"
+                className={"form-input rounded " + (!+value_ ? "border-red-500" : "")}
+                onBlur={_ => emit()}
+                onChange={event => setValue(event.currentTarget.value)}
             />
         </td>
         <td>
@@ -50,7 +86,8 @@ function emptyCooldown() {
     return {
         'displayName': '',
         'cooldown': 120,
-        'groupName': ''
+        'groupName': '',
+        'value': 1
     };
 }
 
@@ -77,14 +114,12 @@ function RaidSetup({ cooldowns, onChange }) {
         >[Add]</ButtonLink>
         <table className="table-fixed">
             <tbody>
-                {cooldowns.map(({ displayName, cooldown, groupName }, index) =>
+                {cooldowns.map((props, index) =>
                     <Cooldown
                         key={index}
                         onChange={updated => onChange({ cooldowns: immutableUpdate(cooldowns, index, updated) })}
                         onRemove={_ => onChange({ cooldowns: immutableRemove(cooldowns, index) })}
-                        displayName={displayName}
-                        cooldown={cooldown}
-                        groupName={groupName}
+                        {...props}
                     />
                 )}
             </tbody>
@@ -154,6 +189,7 @@ function payload({ template, cooldowns }) {
             return {
                 'displayName': cooldown.displayName,
                 'cooldown': parseFloat(cooldown.cooldown),
+                'value': parseFloat(cooldown.value),
                 'groupNames': cooldown.groupName.split(',').map(groupName => groupName.trim())
             }
         })

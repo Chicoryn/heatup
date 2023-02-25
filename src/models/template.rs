@@ -3,28 +3,31 @@ use regex::Regex;
 use std::collections::HashMap;
 use super::CooldownUsage;
 
-#[derive(Debug)]
+lazy_static! {
+    static ref TIME: Regex = Regex::new(r"\{time:(?P<at>[\d:]+)\}").unwrap();
+    static ref USAGE: Regex = Regex::new(r"\{\{(?P<names>.*?)(<(?P<value>[\d]+)>)?\}\}").unwrap();
+    static ref MMSS: Regex = Regex::new(r"(?P<mins>[\d+]+):(?P<secs>[\d]+)").unwrap();
+}
+
 pub struct Template {
     usages: Vec<CooldownUsage>
 }
 
 impl Template {
     pub fn parse(template: &str) -> Result<Self, String> {
-        lazy_static! {
-            static ref TIME: Regex = Regex::new(r"\{time:([\d:]+)\}").unwrap();
-            static ref USAGE: Regex = Regex::new(r"\{\{(.*?)\}\}").unwrap();
-        }
-
         let mut usages = vec! [];
         let mut uid_counter = 1;
 
         for line in template.lines() {
             if let Some(time) = TIME.captures(line) {
-                let at: u64 = Self::parse_timestamp(&time[1])?;
+                let at: u64 = Self::parse_timestamp(&time["at"])?;
 
                 for caps in USAGE.captures_iter(line) {
-                    let group_names = caps[1].split("/").map(|s| s.trim().to_string()).collect::<Vec<String>>();
-                    let value = 1.0;
+                    let group_names = caps["names"].split("/").map(|s| s.trim().to_string()).collect::<Vec<_>>();
+                    let value = caps.name("value")
+                        .map(|value| value.as_str().parse::<f64>())
+                        .unwrap_or(Ok(1.0))
+                        .map_err(|_| format!("Unrecognized value format -- {}", &caps["value"]))?;
                     let uid = uid_counter;
                     uid_counter += 1;
 
@@ -37,10 +40,6 @@ impl Template {
     }
 
     fn parse_timestamp(ts: &str) -> Result<u64, String> {
-        lazy_static! {
-            static ref MMSS: Regex = Regex::new(r"(?P<mins>[\d+]+):(?P<secs>[\d]+)").unwrap();
-        }
-
         if let Some(mmss) = MMSS.captures(ts) {
             let mins = mmss["mins"].parse::<u64>().unwrap();
             let secs = mmss["secs"].parse::<u64>().unwrap();
@@ -54,10 +53,6 @@ impl Template {
     }
 
     pub fn subst_assignments(&self, template: &str, assignments: HashMap<u64, Option<String>>) -> String {
-        lazy_static! {
-            static ref TIME: Regex = Regex::new(r"\{time:([\d:]+)\}").unwrap();
-            static ref USAGE: Regex = Regex::new(r"\{\{(.*?)\}\}").unwrap();
-        }
         let mut count = 0;
 
         template.lines().map(|line| {
